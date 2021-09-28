@@ -223,7 +223,7 @@ func IsValid(na *wire.NetAddress) bool {
 // the public internet.  This is true as long as the address is valid and is not
 // in any reserved ranges.
 func IsRoutable(na *wire.NetAddress) bool {
-	return IsValid(na) && !(IsRFC1918(na) || IsRFC2544(na) ||
+	return IsValid(na) && !( /*IsRFC1918(na) OSTN - allow private ips || */ IsRFC2544(na) ||
 		IsRFC3927(na) || IsRFC4862(na) || IsRFC3849(na) ||
 		IsRFC4843(na) || IsRFC5737(na) || IsRFC6598(na) ||
 		IsLocal(na) || (IsRFC4193(na) && !IsOnionCatTor(na)))
@@ -240,6 +240,10 @@ func GroupKey(na *wire.NetAddress) string {
 	}
 	if !IsRoutable(na) {
 		return "unroutable"
+	}
+	if IsRFC1918(na) {
+		// OSTN - allow all RFC 1918 IPs.
+		return na.IP.String()
 	}
 	if IsIPv4(na) {
 		return na.IP.Mask(net.CIDRMask(16, 32)).String()
